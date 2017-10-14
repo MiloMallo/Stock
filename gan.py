@@ -10,7 +10,7 @@ class GAN():
     def sample_Z(self, batch_size, n):
         return np.random.uniform(-1., 1., size=(batch_size, n))
 
-    def __init__(self, num_features, num_historical_days, generator_input_size=100):
+    def __init__(self, num_features, num_historical_days, generator_input_size=200):
 
 
         self.X = tf.placeholder(tf.float32, shape=[None, num_historical_days, num_features])
@@ -22,12 +22,12 @@ class GAN():
             W1 = tf.Variable(tf.truncated_normal([generator_input_size, generator_output_size*5]))
             b1 = tf.Variable(tf.truncated_normal([generator_output_size*5]))
 
-            h1 = tf.nn.relu(tf.matmul(self.Z, W1) + b1)
+            h1 = tf.nn.sigmoid(tf.matmul(self.Z, W1) + b1)
 
             W2 = tf.Variable(tf.truncated_normal([generator_output_size*5, generator_output_size*3]))
             b2 = tf.Variable(tf.truncated_normal([generator_output_size*3]))
 
-            h2 = tf.nn.relu(tf.matmul(h1, W2) + b2)
+            h2 = tf.nn.sigmoid(tf.matmul(h1, W2) + b2)
 
             W3 = tf.Variable(tf.truncated_normal([generator_output_size*3, generator_output_size]))
             b3 = tf.Variable(tf.truncated_normal([generator_output_size]))
@@ -89,7 +89,7 @@ class GAN():
             D_prob = tf.nn.sigmoid(D_logit)
             return D_prob, D_logit, flattened_convolution
 
-        D_real, D_logit_real, features = discriminator(X)
+        D_real, D_logit_real, self.features = discriminator(X)
         D_fake, D_logit_fake, _ = discriminator(g_log_prob)
 
 
