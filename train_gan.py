@@ -46,31 +46,41 @@ class TrainGan:
                 yield batch
                 batch = []
 
-    def train(self, print_steps=1000, save_steps=10000):
+    def train(self, print_steps=100, save_steps=1000):
         if not os.path.exists('./models'):
             os.makedirs('./models')
         sess = tf.Session()
         G_loss = 0
         D_loss = 0
+        G_l2_loss = 0
+        D_l2_loss = 0
         sess.run(tf.global_variables_initializer())
         saver = tf.train.Saver()
+        with open('./models/checkpoint', 'rb') as f:
+            model_name = next(f).split('"')[1]
+        saver.restore(sess, "./models/{}".format(model_name))
         for i, X in enumerate(self.random_batch(self.batch_size)):
             if i % 1 == 0:
-                _, D_loss_curr = sess.run([self.gan.D_solver, self.gan.D_loss], feed_dict=
+                _, D_loss_curr, D_l2_loss_curr = sess.run([self.gan.D_solver, self.gan.D_loss, self.gan.D_l2_loss], feed_dict=
                         {self.gan.X:X, self.gan.Z:self.gan.sample_Z(self.batch_size, 200)})
                 D_loss += D_loss_curr
+                D_l2_loss += D_l2_loss_curr
             if i % 1 == 0:
-                _, G_loss_curr = sess.run([self.gan.G_solver, self.gan.G_loss],
-                        feed_dict={self.gan.Z:self.gan.sample_Z(self.batch_size, 200)})
+                _, G_loss_curr, G_l2_loss_curr = sess.run([self.gan.G_solver, self.gan.G_loss, self.gan.G_l2_loss],
+                        feed_dict={self.gan.Z:self.gan.sample_Z(self.batch_size*2, 200)})
                 G_loss += G_loss_curr
-            if i % print_steps == 0:
-                print('Step={} D_loss={}, G_loss={}'.format(i, D_loss/print_steps, G_loss/print_steps))
+                G_l2_loss += G_l2_loss_curr
+            if (i+1) % print_steps == 0:
+                print('Step={} D_loss={}, G_loss={}'.format(i, D_loss/print_steps - D_l2_loss/print_steps, G_loss/print_steps - G_l2_loss/print_steps))
+                print('D_l2_loss = {} G_l2_loss={}'.format(D_l2_loss/print_steps, G_l2_loss/print_steps))
                 G_loss = 0
                 D_loss = 0
+                G_l2_loss = 0
+                D_l2_loss = 0
             if (i+1) % save_steps == 0:
                 saver.save(sess, './models/gan.ckpt')
 
 
 if __name__ == '__main__':
-    gan = TrainGan(20, 128)
+    gan = TrainGan(20, 5000)
     gan.train()

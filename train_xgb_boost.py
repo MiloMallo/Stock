@@ -6,7 +6,9 @@ import tensorflow as tf
 import xgboost as xgb
 from sklearn.externals import joblib
 from sklearn.metrics import confusion_matrix
+from plot_confusion_matrix import plot_confusion_matrix
 
+os.environ["CUDA_VISIBLE_DEVICES"]=""
 
 class TrainXGBBoost:
 
@@ -17,14 +19,14 @@ class TrainXGBBoost:
         self.test_labels = []
         assert os.path.exists('./models/checkpoint')
         gan = GAN(num_features=5, num_historical_days=num_historical_days,
-                        generator_input_size=200)
+                        generator_input_size=200, is_train=False)
         with tf.Session() as sess:
             sess.run(tf.global_variables_initializer())
             saver = tf.train.Saver()
             with open('./models/checkpoint', 'rb') as f:
                 model_name = next(f).split('"')[1]
             saver.restore(sess, "./models/{}".format(model_name))
-            files = [os.path.join('./stock_data', f) for f in os.listdir('./stock_data')][:1]
+            files = [os.path.join('./stock_data', f) for f in os.listdir('./stock_data')]
             for file in files:
                 print(file)
                 #Read in file -- note that parse_dates will be need later
@@ -63,27 +65,27 @@ class TrainXGBBoost:
     def train(self):
         params = {}
         params['objective'] = 'multi:softprob'
-        params['eta'] = 0.001
+        params['eta'] = 0.01
         params['num_class'] = 2
-        params['max_depth'] = 9
-        params['subsample'] = 0.01
-        params['colsample_bytree'] = 0.5
+        params['max_depth'] = 20
+        params['subsample'] = 0.1
+        params['colsample_bytree'] = 0.1
         params['eval_metric'] = 'mlogloss'
-        params['scale_pos_weight'] = 10
-        params['silent'] = True
-        params['gpu_id'] = 0
-        params['max_bin'] = 16
-        params['tree_method'] = 'gpu_hist'
+        #params['scale_pos_weight'] = 10
+        #params['silent'] = True
+        #params['gpu_id'] = 0
+        #params['max_bin'] = 16
+        #params['tree_method'] = 'gpu_hist'
 
         train = xgb.DMatrix(self.data, self.labels)
         test = xgb.DMatrix(self.test_data, self.test_labels)
 
         watchlist = [(train, 'train'), (test, 'test')]
-        clf = xgb.train(params, train, 4, evals=watchlist)
+        clf = xgb.train(params, train, 10000, evals=watchlist, early_stopping_rounds=100)
         joblib.dump(clf, 'models/clf.pkl')
         cm = confusion_matrix(self.test_labels, map(lambda x: int(x[1] > .5), clf.predict(test)))
         print(cm)
-
+        plot_confusion_matrix(cm, ['Did not increased by X%', 'Increased by X%'], title="Confusion Matrix")
 
 
 
