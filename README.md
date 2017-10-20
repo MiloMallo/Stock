@@ -12,6 +12,7 @@ The GAN is trained on 96 stocks off the Nasdaq. Each stock is normalized using a
 
 **Testing**
 The data the was held out in the training phase is run through the Discriminator portion of the GAN and the activated weights of the last convolutional layer are extracted. The extracted features are then classified using XGBoost.
+
 **Results** 
 The confusion matrix shows the results of the model's classification. The perfect confusion matrix would only have predictions on the main diagonal. Each number off the main diagonal is a misclassification.  
 
