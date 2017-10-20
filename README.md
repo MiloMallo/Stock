@@ -20,9 +20,11 @@ The confusion matrix shows the results of the model's classification. The perfec
 **Predictions of Up or Down movement over 10 Days**
 
 The predictions over a 10 day period are quite good. 
+
 ![alt text](https://github.com/nmharmon8/StockMarketGAN/blob/master/figures/XGB_GAN_Confusion_Matrix_Up_Or_Down_Over_10_Days_normalize.png)
 
 **Predictions of Up or Down movement over 1 Day**
 
 Predicting over a short time interval seems to be harder. Results loss significant accuracy when trying to predict the next day movement of the stock. 
+
 ![alt text](https://github.com/nmharmon8/StockMarketGAN/blob/master/figures/XGB_GAN_Confusion_Matrix_Up_Or_Down_Over_1_Days_normalize.png)
