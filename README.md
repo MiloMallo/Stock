@@ -3,7 +3,7 @@ Deep Learning constructs feature using only raw data. The leaned representation 
 # GAN 
 For a full review of a GAN: [Generative Adversarial Nets](https://arxiv.org/pdf/1406.2661.pdf) 
 ![alt text](https://github.com/nmharmon8/StockMarketGAN/blob/master/figures/gan.png)
-The Generator is trained to generate data that looks like historical price data of the target stocks over a gaussian distribution. The Discriminator is trained to tell the difference between the data from the Generator and the real data. The error from the Discriminator is used to train the Generator to defeat the Discriminator. The competition between the Generator and the Discriminator forces the Discriminator to lean features that are descriptive of real data.    
+The Generator is trained to generate data that looks like historical price data of the target stocks over a gaussian distribution. The Discriminator is trained to tell the difference between the data from the Generator and the real data. The error from the Discriminator is used to train the Generator to defeat the Discriminator. The competition between the Generator and the Discriminator forces the Discriminator to distinguish random from real variability.    
 # Approach 
 **Data**
 Historical prices of stocks are likely not very predictive of the future price of the stock, but it is free data. Technical indicators are calculated using the historical prices of stocks. Not being a trader I don't know the validity of technical indicators, but if a sufficient number investors use technical indicators to invest such that they move the market, then the historical prices data of stocks should suffice to predict the direction of the market correctly more then 50% of the time.
