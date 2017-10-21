@@ -19,7 +19,7 @@ class TrainCNN:
         self.test_labels = []
         self.cnn = CNN(num_features=5, num_historical_days=num_historical_days, is_train=False)
         files = [os.path.join('./stock_data', f) for f in os.listdir('./stock_data')]
-        for file in files:
+        for file in files[0:1]:
             print(file)
             df = pd.read_csv(file, index_col='Date', parse_dates=True)
             df = df[['Open','High','Low','Close','Volume']]
@@ -46,13 +46,15 @@ class TrainCNN:
         labels = []
         data = zip(self.data, self.labels)
         while True:
-            batch.append(random.choice(data))
+            d = random.choice(data)
+            batch.append(d[0])
+            labels.append(d[1])
             if (len(batch) == batch_size):
                 yield batch, labels
                 batch = []
                 labels = []
 
-    def train(self, print_steps=100, display_data=100, save_steps=1000):
+    def train(self, print_steps=100, display_data=100, save_steps=1000, batch_size=128):
         if not os.path.exists('./cnn_models'):
             os.makedirs('./cnn_models')
         sess = tf.Session()
@@ -60,13 +62,13 @@ class TrainCNN:
         l2_loss = 0
         sess.run(tf.global_variables_initializer())
         saver = tf.train.Saver()
-        with open('./cnn_models/checkpoint', 'rb') as f:
-            model_name = next(f).split('"')[1]
-        #saver.restore(sess, "./models/{}".format(model_name))
-        for i, [X, y] in enumerate(self.random_batch(self.batch_size)):
-           
-            _, loss_curr = sess.run([self.cnn.optimizer, self.loss], feed_dict=
-                    {self.cnn.X:X, self.cnn.y:y})
+        if os.path.exists('./cnn_models/checkpoint'):
+            with open('./cnn_models/checkpoint', 'rb') as f:
+                model_name = next(f).split('"')[1]
+            #saver.restore(sess, "./models/{}".format(model_name))
+        for i, [X, y] in enumerate(self.random_batch(batch_size)):
+            _, loss_curr = sess.run([self.cnn.optimizer, self.cnn.loss], feed_dict=
+                    {self.cnn.X:X, self.cnn.Y:y})
             loss += loss_curr
             if (i+1) % print_steps == 0:
                 print('Step={} loss={}'.format(i, loss/print_steps))
