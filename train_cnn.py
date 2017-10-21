@@ -17,34 +17,27 @@ class TrainCNN:
         self.labels = []
         self.test_data = []
         self.test_labels = []
-        assert os.path.exists('./models/checkpoint')
         self.cnn = CNN(num_features=5, num_historical_days=num_historical_days, is_train=False)
-        with tf.Session() as sess:
-            sess.run(tf.global_variables_initializer())
-            saver = tf.train.Saver()
-            with open('./models/checkpoint', 'rb') as f:
-                model_name = next(f).split('"')[1]
-            saver.restore(sess, "./models/{}".format(model_name))
-            files = [os.path.join('./stock_data', f) for f in os.listdir('./stock_data')]
-            for file in files:
-                print(file)
-                df = pd.read_csv(file, index_col='Date', parse_dates=True)
-                df = df[['Open','High','Low','Close','Volume']]
-                labels = df.Close.pct_change(days).map(lambda x: [int(x > pct_change/100.0), int(x <= pct_change/100.0)])
-                df = ((df -
-                df.rolling(num_historical_days).mean().shift(-num_historical_days))
-                /(df.rolling(num_historical_days).max().shift(-num_historical_days)
-                -df.rolling(num_historical_days).min().shift(-num_historical_days)))
-                df['labels'] = labels
-                df = df.dropna()
-                test_df = df[:365]
-                df = df[400:]
-                for i in range(num_historical_days, len(df), num_historical_days):
-                    self.data.append(df[['Open', 'High', 'Low', 'Close', 'Volume']].values[i-num_historical_days:i])
-                    self.labels.append(df['labels'].values[i-1])
-                for i in range(num_historical_days, len(test_df), 1):
-                    self.test_data.append(test_df[['Open', 'High', 'Low', 'Close', 'Volume']].values[i-num_historical_days:i])
-                    self.test_labels.append(test_df['labels'].values[i-1])
+        files = [os.path.join('./stock_data', f) for f in os.listdir('./stock_data')]
+        for file in files:
+            print(file)
+            df = pd.read_csv(file, index_col='Date', parse_dates=True)
+            df = df[['Open','High','Low','Close','Volume']]
+            labels = df.Close.pct_change(days).map(lambda x: [int(x > pct_change/100.0), int(x <= pct_change/100.0)])
+            df = ((df -
+            df.rolling(num_historical_days).mean().shift(-num_historical_days))
+            /(df.rolling(num_historical_days).max().shift(-num_historical_days)
+            -df.rolling(num_historical_days).min().shift(-num_historical_days)))
+            df['labels'] = labels
+            df = df.dropna()
+            test_df = df[:365]
+            df = df[400:]
+            for i in range(num_historical_days, len(df), num_historical_days):
+                self.data.append(df[['Open', 'High', 'Low', 'Close', 'Volume']].values[i-num_historical_days:i])
+                self.labels.append(df['labels'].values[i-1])
+            for i in range(num_historical_days, len(test_df), 1):
+                self.test_data.append(test_df[['Open', 'High', 'Low', 'Close', 'Volume']].values[i-num_historical_days:i])
+                self.test_labels.append(test_df['labels'].values[i-1])
 
 
 
