@@ -52,15 +52,18 @@ class TrainXGBBoost:
                 #This may not create good samples if num_historical_days is a
                 #mutliple of 7
                 data = df[['Open', 'High', 'Low', 'Close', 'Volume']].values
+                labels = df['labels'].values
                 for i in range(num_historical_days, len(df), num_historical_days):
                     features = sess.run(gan.features, feed_dict={gan.X:[data[i-num_historical_days:i]]})
                     self.data.append(features[0])
-                    self.labels.append(df['labels'].values[i-1])
+                    print(features[0])
+                    self.labels.append(labels[i-1])
                 data = test_df[['Open', 'High', 'Low', 'Close', 'Volume']].values
+                labels = test_df['labels'].values
                 for i in range(num_historical_days, len(test_df), 1):
                     features = sess.run(gan.features, feed_dict={gan.X:[data[i-num_historical_days:i]]})
                     self.test_data.append(features[0])
-                    self.test_labels.append(test_df['labels'].values[i-1])
+                    self.test_labels.append(labels[i-1])
 
 
 
@@ -70,8 +73,8 @@ class TrainXGBBoost:
         params['eta'] = 0.01
         params['num_class'] = 2
         params['max_depth'] = 20
-        params['subsample'] = 0.1
-        params['colsample_bytree'] = 0.1
+        params['subsample'] = 0.05
+        params['colsample_bytree'] = 0.05
         params['eval_metric'] = 'mlogloss'
         #params['scale_pos_weight'] = 10
         #params['silent'] = True
@@ -83,7 +86,7 @@ class TrainXGBBoost:
         test = xgb.DMatrix(self.test_data, self.test_labels)
 
         watchlist = [(train, 'train'), (test, 'test')]
-        clf = xgb.train(params, train, 10000, evals=watchlist, early_stopping_rounds=100)
+        clf = xgb.train(params, train, 1000, evals=watchlist, early_stopping_rounds=100)
         joblib.dump(clf, 'models/clf.pkl')
         cm = confusion_matrix(self.test_labels, map(lambda x: int(x[1] > .5), clf.predict(test)))
         print(cm)

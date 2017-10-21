@@ -37,10 +37,14 @@ def download(i, symbol, url, output):
 		print('Failed to download {}'.format(symbol))
 		print(e)
 
-if not os.path.exists('./stock_data'):
-    os.makedirs('./stock_data')
+def download_all():
+	if not os.path.exists('./stock_data'):
+	    os.makedirs('./stock_data')
 
-nas = nasdaq()
-for i, symbol in enumerate(nas.symbols()):
-	url = nas.build_url(symbol)
-	download(i, symbol, url, nas.output)
+	nas = nasdaq()
+	for i, symbol in enumerate(nas.symbols()):
+		url = nas.build_url(symbol)
+		download(i, symbol, url, nas.output)
+
+if __name__ == '__main__':
+	download_all()
