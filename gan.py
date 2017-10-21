@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import os
 
 SEED = 42
+tf.set_random_seed(SEED)
 
 class GAN():
 
@@ -29,18 +30,18 @@ class GAN():
 
             h1 = tf.nn.sigmoid(tf.matmul(self.Z, W1) + b1)
 
-            v1, m1, beta1, gamma1 = get_batch_norm_with_global_normalization_vars(generator_output_size*10)
-            h1 = tf.nn.batch_norm_with_global_normalization(h1, v1, m1,
-                    beta1, gamma1, variance_epsilon=0.000001, scale_after_normalization=False)
+            # v1, m1, beta1, gamma1 = get_batch_norm_with_global_normalization_vars(generator_output_size*10)
+            # h1 = tf.nn.batch_norm_with_global_normalization(h1, v1, m1,
+            #         beta1, gamma1, variance_epsilon=0.000001, scale_after_normalization=False)
 
             W2 = tf.Variable(tf.truncated_normal([generator_output_size*10, generator_output_size*5]))
             b2 = tf.Variable(tf.truncated_normal([generator_output_size*5]))
 
             h2 = tf.nn.sigmoid(tf.matmul(h1, W2) + b2)
 
-            v2, m2, beta2, gamma2 = get_batch_norm_with_global_normalization_vars(generator_output_size*5)
-            h2 = tf.nn.batch_norm_with_global_normalization(h2, v2, m2,
-                    beta2, gamma2, variance_epsilon=0.000001, scale_after_normalization=False)
+            # v2, m2, beta2, gamma2 = get_batch_norm_with_global_normalization_vars(generator_output_size*5)
+            # h2 = tf.nn.batch_norm_with_global_normalization(h2, v2, m2,
+            #         beta2, gamma2, variance_epsilon=0.000001, scale_after_normalization=False)
 
 
             W3 = tf.Variable(tf.truncated_normal([generator_output_size*5, generator_output_size]))
@@ -48,6 +49,7 @@ class GAN():
 
             g_log_prob = tf.matmul(h2, W3) + b3
             g_log_prob = tf.reshape(g_log_prob, [-1, num_historical_days, 1, num_features])
+            self.gen_data = tf.reshape(g_log_prob, [-1, num_historical_days, num_features])
             #g_log_prob = g_log_prob / tf.reshape(tf.reduce_max(g_log_prob, axis=1), [-1, 1, num_features, 1])
             #g_prob = tf.nn.sigmoid(g_log_prob)
 
@@ -91,8 +93,8 @@ class GAN():
             # pool = tf.nn.avg_pool(relu, ksize=[1, 2, 1, 1], strides=[1, 2, 1, 1], padding='SAME')
             if is_train:
                 pool = tf.nn.dropout(pool, keep_prob = 0.8)
-            pool = tf.nn.batch_norm_with_global_normalization(pool, v1, m1,
-                    beta1, gamma1, variance_epsilon=0.000001, scale_after_normalization=False)
+            # pool = tf.nn.batch_norm_with_global_normalization(pool, v1, m1,
+            #         beta1, gamma1, variance_epsilon=0.000001, scale_after_normalization=False)
             print(pool)
 
             conv = tf.nn.conv2d(pool, k2,strides=[1, 1, 1, 1],padding='SAME')
@@ -101,16 +103,16 @@ class GAN():
             #pool = tf.nn.avg_pool(relu, ksize=[1, 2, 1, 1], strides=[1, 2, 1, 1], padding='SAME')
             if is_train:
                 pool = tf.nn.dropout(pool, keep_prob = 0.8)
-            pool = tf.nn.batch_norm_with_global_normalization(pool, v2, m2,
-                    beta2, gamma2, variance_epsilon=0.000001, scale_after_normalization=False)
+            # pool = tf.nn.batch_norm_with_global_normalization(pool, v2, m2,
+            #         beta2, gamma2, variance_epsilon=0.000001, scale_after_normalization=False)
             print(pool)
 
             conv = tf.nn.conv2d(pool, k3, strides=[1, 1, 1, 1], padding='VALID')
             relu = tf.nn.relu(tf.nn.bias_add(conv, b3))
             if is_train:
                 relu = tf.nn.dropout(relu, keep_prob=0.8)
-            relu = tf.nn.batch_norm_with_global_normalization(relu, v3, m3,
-                    beta3, gamma3, variance_epsilon=0.000001, scale_after_normalization=False)
+            # relu = tf.nn.batch_norm_with_global_normalization(relu, v3, m3,
+            #         beta3, gamma3, variance_epsilon=0.000001, scale_after_normalization=False)
             print(relu)
 
 
@@ -123,8 +125,8 @@ class GAN():
 
             h1 = tf.nn.relu(tf.matmul(flattened_convolution, W1) + b4)
 
-            h1 = tf.nn.batch_norm_with_global_normalization(h1, v4, m4,
-                    beta4, gamma4, variance_epsilon=0.000001, scale_after_normalization=False)
+            # h1 = tf.nn.batch_norm_with_global_normalization(h1, v4, m4,
+            #         beta4, gamma4, variance_epsilon=0.000001, scale_after_normalization=False)
 
             D_logit = tf.matmul(h1, W2)
             D_prob = tf.nn.sigmoid(D_logit)
@@ -142,5 +144,5 @@ class GAN():
         self.G_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=D_logit_fake, labels=tf.ones_like(D_logit_fake))) + self.G_l2_loss
 
 
-        self.D_solver = tf.train.AdamOptimizer(learning_rate=0.000051).minimize(self.D_loss, var_list=theta_D)
-        self.G_solver = tf.train.AdamOptimizer(learning_rate=0.000051).minimize(self.G_loss, var_list=theta_G)
+        self.D_solver = tf.train.AdamOptimizer(learning_rate=0.0001).minimize(self.D_loss, var_list=theta_D)
+        self.G_solver = tf.train.AdamOptimizer(learning_rate=0.000055).minimize(self.G_loss, var_list=theta_G)

@@ -4,7 +4,7 @@ from gan import GAN
 import random
 import tensorflow as tf
 
-
+random.seed(42)
 class TrainGan:
 
     def __init__(self, num_historical_days, batch_size=128):
@@ -46,7 +46,7 @@ class TrainGan:
                 yield batch
                 batch = []
 
-    def train(self, print_steps=100, save_steps=1000):
+    def train(self, print_steps=100, display_data=100, save_steps=1000):
         if not os.path.exists('./models'):
             os.makedirs('./models')
         sess = tf.Session()
@@ -67,20 +67,25 @@ class TrainGan:
                 D_l2_loss += D_l2_loss_curr
             if i % 1 == 0:
                 _, G_loss_curr, G_l2_loss_curr = sess.run([self.gan.G_solver, self.gan.G_loss, self.gan.G_l2_loss],
-                        feed_dict={self.gan.Z:self.gan.sample_Z(self.batch_size*2, 200)})
+                        feed_dict={self.gan.Z:self.gan.sample_Z(self.batch_size, 200)})
                 G_loss += G_loss_curr
                 G_l2_loss += G_l2_loss_curr
             if (i+1) % print_steps == 0:
                 print('Step={} D_loss={}, G_loss={}'.format(i, D_loss/print_steps - D_l2_loss/print_steps, G_loss/print_steps - G_l2_loss/print_steps))
-                print('D_l2_loss = {} G_l2_loss={}'.format(D_l2_loss/print_steps, G_l2_loss/print_steps))
+                #print('D_l2_loss = {} G_l2_loss={}'.format(D_l2_loss/print_steps, G_l2_loss/print_steps))
                 G_loss = 0
                 D_loss = 0
                 G_l2_loss = 0
                 D_l2_loss = 0
             if (i+1) % save_steps == 0:
-                saver.save(sess, './models/gan.ckpt')
+                saver.save(sess, './models/gan.ckpt', i)
+            # if (i+1) % display_data == 0:
+            #     print('Generated Data')
+            #     print(sess.run(self.gan.gen_data, feed_dict={self.gan.Z:self.gan.sample_Z(1, 200)}))
+            #     print('Real Data')
+            #     print(X[0])
 
 
 if __name__ == '__main__':
-    gan = TrainGan(20, 5000)
+    gan = TrainGan(20, 128)
     gan.train()

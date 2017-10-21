@@ -12,7 +12,7 @@ os.environ["CUDA_VISIBLE_DEVICES"]=""
 
 class TrainXGBBoost:
 
-    def __init__(self, num_historical_days, days=10, pct_change=5):
+    def __init__(self, num_historical_days, days=10, pct_change=0):
         self.data = []
         self.labels = []
         self.test_data = []
@@ -51,12 +51,14 @@ class TrainXGBBoost:
                 df = df[400:]
                 #This may not create good samples if num_historical_days is a
                 #mutliple of 7
+                data = df[['Open', 'High', 'Low', 'Close', 'Volume']].values
                 for i in range(num_historical_days, len(df), num_historical_days):
-                    features = sess.run(gan.features, feed_dict={gan.X:[df[['Open', 'High', 'Low', 'Close', 'Volume']].values[i-num_historical_days:i]]})
+                    features = sess.run(gan.features, feed_dict={gan.X:[data[i-num_historical_days:i]]})
                     self.data.append(features[0])
                     self.labels.append(df['labels'].values[i-1])
+                data = test_df[['Open', 'High', 'Low', 'Close', 'Volume']].values
                 for i in range(num_historical_days, len(test_df), 1):
-                    features = sess.run(gan.features, feed_dict={gan.X:[test_df[['Open', 'High', 'Low', 'Close', 'Volume']].values[i-num_historical_days:i]]})
+                    features = sess.run(gan.features, feed_dict={gan.X:[data[i-num_historical_days:i]]})
                     self.test_data.append(features[0])
                     self.test_labels.append(test_df['labels'].values[i-1])
 
@@ -85,15 +87,8 @@ class TrainXGBBoost:
         joblib.dump(clf, 'models/clf.pkl')
         cm = confusion_matrix(self.test_labels, map(lambda x: int(x[1] > .5), clf.predict(test)))
         print(cm)
-        plot_confusion_matrix(cm, ['Did not increased by X%', 'Increased by X%'], title="Confusion Matrix")
+        plot_confusion_matrix(cm, ['Down', 'Up'], normalize=True, title="Confusion Matrix")
 
 
-
-
-
-
-
-
-
-boost_model = TrainXGBBoost(num_historical_days=20, pct_change=5)
+boost_model = TrainXGBBoost(num_historical_days=20, days=10, pct_change=10)
 boost_model.train()
