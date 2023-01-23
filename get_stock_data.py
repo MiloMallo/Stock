@@ -1,8 +1,6 @@
 import os
-import datetime
-import urllib2
+import urllib
 from dateutil.parser import parse
-import threading
 
 assert 'QUANDL_KEY' in os.environ
 quandl_api_key = os.environ['QUANDL_KEY']
@@ -27,7 +25,7 @@ class nasdaq():
 def download(i, symbol, url, output):
 	print('Downloading {} {}'.format(symbol, i))
 	try:
-		response = urllib2.urlopen(url)
+		response = urllib.urlopen(url)
 		quotes = response.read()
 		lines = quotes.strip().split('\n')
 		with open(os.path.join(output, symbol), 'w') as f:
@@ -39,7 +37,7 @@ def download(i, symbol, url, output):
 
 def download_all():
 	if not os.path.exists('./stock_data'):
-	    os.makedirs('./stock_data')
+		os.makedirs('./stock_data')
 
 	nas = nasdaq()
 	for i, symbol in enumerate(nas.symbols()):
