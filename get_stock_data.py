@@ -1,9 +1,12 @@
 import os
-import urllib
+import requests
+import pandas as pd
 from dateutil.parser import parse
+from dotenv import load_dotenv
 
+load_dotenv()
 assert 'QUANDL_KEY' in os.environ
-quandl_api_key = os.environ['QUANDL_KEY']
+quandl_api_key = os.getenv('QUANDL_KEY')
 
 class nasdaq():
 	def __init__(self):
@@ -25,9 +28,8 @@ class nasdaq():
 def download(i, symbol, url, output):
 	print('Downloading {} {}'.format(symbol, i))
 	try:
-		response = urllib.urlopen(url)
-		quotes = response.read()
-		lines = quotes.strip().split('\n')
+		response = requests.get(url)
+		lines = response.text.strip().split('\n')
 		with open(os.path.join(output, symbol), 'w') as f:
 			for i, line in enumerate(lines):
 				f.write(line + '\n')
